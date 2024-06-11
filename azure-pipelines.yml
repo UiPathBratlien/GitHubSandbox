@@ -1,0 +1,44 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool: 
+  vmImage: windows-latest
+
+steps:
+- script: echo 'Hello, world! projectJsonPath - $(Build.SourcesDirectory) outputPath - $(Build.ArtifactStagingDirectory)\Output '
+  displayName: 'Run a one-line script'
+
+
+- task: UiPathInstallPlatform@4
+  inputs:
+    cliVersion: 'WIN_23.10.8753.32995'
+  
+- task: CmdLine@2
+  displayName: 'List files'
+  inputs:
+    script: |
+      for %%f in ( "$(Build.SourcesDirectory)\*" ) do @echo %%f
+
+
+- task: UiPathTest@4
+  continueOnError: true
+  inputs:
+    testTarget: 'TestSet'
+    testSet: 'Full Set'
+   # testSet: 'LB-ResortCheck'
+    orchestratorConnection: 'BratlienADOv1'
+    folderName: 'SandBox/Bratlien'
+   # folderName: 'SandBox/Lyndsey'
+    traceLevel: 'Information'
+    
+- task: PublishBuildArtifacts@1
+  continueOnError: true
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'BuildPipelineArtifact'
+    publishLocation: 'Container'
